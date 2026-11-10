@@ -1,0 +1,9 @@
+Item,Qty,Unit Price (USD),Total Price (USD),Product Link,Notes
+Nidec 24H BLDC Motor,3,10.10,30.30,https://www.aliexpress.com/,Brushless DC servo motor with built-in driver
+Custom 2-Layer PCB,1,8.00,8.00,https://jlcpcb.com/,5 pcs manufactured by JLCPCB ($2 + shipping)
+3S LiPo Battery 11.1V,1,0.00,0.00,Already owned,Main power supply (already owned by maker)
+GY-521 MPU-6050 Module,1,1.80,1.80,https://www.aliexpress.com/,6-axis IMU (gyro + accelerometer)
+M3 & M4 Fasteners Assortment Kit,1,7.00,7.00,https://www.aliexpress.com/,M3x8mm screws M4x16mm bolts nuts set screws
+Capacitors + XT30 + Female Headers,1,4.50,4.50,https://www.aliexpress.com/,Passives connectors and headers for PCB
+3D Printing Filament (PLA/PETG 1kg),1,14.00,14.00,https://www.aliexpress.com/,Chassis and flywheel printing material
+Total,,,65.60,,
