@@ -1,14 +1,14 @@
 Item,Qty,Unit Price (USD),Total Price (USD),Product Link,Notes
 Nidec 24H BLDC Motor,3,10.10,30.30,https://pl.aliexpress.com/item/1005005779568014.html,Brushless reaction wheel motor with built in driver
-Custom 2-Layer PCB,1,2.00,2.00,https://jlcpcb.com/,5 pcs manufactured by JLCPCB
+Custom 2-Layer PCB,5,2.00,2.00,https://jlcpcb.com/, manufactured by JLCPCB
 3S LiPo Battery 11.1V,1,0.00,0.00,Already owned,Main power supply (already owned by maker)
 GY-521 MPU-6050 Module,1,3.17,3.17,https://allegro.pl/oferta/imz-akcelerometr-zyroskop-i2c-gy-521-mpu-6050-6dof-17554658489,6-axis IMU
 M4x16 bolts kit,1,3.00,3.00,https://allegro.pl/oferta/m4x16-sruba-imbusowa-leb-kulisty-nierdzewna-7380-50-szt-17958139745,reaction wheel balast bolts
 M4 nuts kit,1,0.6,0.6,https://allegro.pl/produkt/nakretka-bejmet-m4-nierdzewna-srebrna-50-szt-286d9253-e7fe-460d-8d60-762ffcfbcc0e?offerId=17908811844,reaction wheel balast nuts
-M3 bolts and nuts kit,1,0.00,0.00,Already owned,
+M3 bolts and nuts kit,1,0.00,0.00,Already owned,screwing together the cube
 XT30 ,1,1,1,https://allegro.pl/oferta/xt30-pw-meska-gniazdo-17727987066,battery connnector
 470 µF capacitor,1,0.8,0.8,https://www.piekarz.pl/42957-kondensator-eeufr1e471yb-panasonic-470uf-25v/,bulk electrolytic capacitor (C1) 
-100nF capacitor,1,0.6,0.6,https://www.piekarz.pl/06585-kondensator-100nf-50v/,100 nF ceramic capacitor (C2)
+100nF capacitor,1,0.6,0.6,https://www.piekarz.pl/06585-kondensator-100nf-50v/,decoupling ceramic capacitor (C2)
 3D Printing Filament ,1,0.00,0.00,Already owned,printing material
 taxes and shippings,,,7,,
 Total,,,48.47,,
