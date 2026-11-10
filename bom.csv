@@ -1,6 +1,6 @@
 Item,Qty,Unit Price (USD),Total Price (USD),Product Link,Notes
 Nidec 24H BLDC Motor,3,10.10,30.30,https://pl.aliexpress.com/item/1005005779568014.html,Brushless reaction wheel motor with built in driver
-Custom 2-Layer PCB,5,2.00,2.00,https://jlcpcb.com/, manufactured by JLCPCB
+Custom 2-Layer PCB,5,0.4,2.00,https://jlcpcb.com/, manufactured by JLCPCB
 3S LiPo Battery 11.1V,1,0.00,0.00,Already owned,Main power supply (already owned by maker)
 GY-521 MPU-6050 Module,1,3.17,3.17,https://allegro.pl/oferta/imz-akcelerometr-zyroskop-i2c-gy-521-mpu-6050-6dof-17554658489,6-axis IMU
 M4x16 bolts kit,1,2.00,2.00,https://allegro.pl/oferta/sruba-imbusowa-nierdzewna-walcowa-ampulowa-inox-a2-din-912-m4x16-50-szt-17944843809,reaction wheel balast bolts
