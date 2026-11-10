@@ -13,7 +13,7 @@ Built as part of the **Hack Club Fallen** program.
 ### Features
 - **3-Axis Reaction Wheel Balancing:** Powered by three Nidec 24H brushless DC servo motors.
 - **Custom PCB:** Designed in KiCad as a carrier board for the ESP32 devkit, motor control signals, power distribution from a 3S LiPo, and MPU6050 breakout.
-- **Lightweight Aerospace-style Truss Frame:** 150x150x150mm modular space-frame with 45° mitred edges, internal corner brackets, and dedicated component mounts.
+- **Lightweight Truss Frame:** 150x150x150mm modular frame with 45° mitred edges, internal corner brackets, and dedicated component mounts.
 - **Dynamic Balancing & Captive Nut Hubs:** Reaction wheels feature 16 M4 perimeter ballast bolts and dual captive M3 nut slots for zero-wobble clamping on the shafts.
 - **Space-Diagonal Center of Mass:** 3S LiPo battery mounted directly opposite the 3 motors to balance the center of gravity along the corner balancing axis.
 
@@ -43,7 +43,7 @@ The mechanical components are modeled parametrically in **Onshape**.
 
 <img width="986" height="705" alt="image" src="https://github.com/user-attachments/assets/d7fc7438-6bc2-4d26-9f4b-95e7c4915269" />
 
-- `PCB-wall` — Passive wall featuring a rigid triangulated truss structure and integrated PCB standoffs.
+- `PCB-wall` — Passive wall with a rigid triangulated truss structure and integrated PCB standoffs.
 
 <img width="975" height="686" alt="image" src="https://github.com/user-attachments/assets/752e19de-039a-45cd-b56b-8965afda7380" />
 
