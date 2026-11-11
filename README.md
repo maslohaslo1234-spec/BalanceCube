@@ -11,7 +11,7 @@ Built as part of the Hack Club Fallen program.
 <img width="716" height="784" alt="Zrzut ekranu 2026-11-08 210207" src="https://github.com/user-attachments/assets/6e7700b1-cf0f-4893-9fa1-70a5cd27ceec" />
 
 ### Features
-- **3-Axis Reaction Wheel Balancing:** Powered by three Nidec 24H brushless motors.
+- **3-Axis Balancing:** Powered by three Nidec 24H brushless motors.
 - **Custom PCB:** Designed in KiCad for the ESP32 devkit, motor control signals, power distribution from a 3S LiPo, and MPU6050.
 - **Lightweight Frame:** 150x150x150mm modular frame with 45° chamfered edges, internal corner brackets, and dedicated component mounts.
 - **Dynamic Balancing and Nut Slots:** Reaction wheels have 16 M4 ballast bolts and M3 nut slots for clamping on the shaft.
