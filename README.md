@@ -25,10 +25,10 @@ Built as part of the Hack Club Fallen program.
 | :--- | :--- |
 | **Microcontroller** | ESP32 DevKit (Dual-core, hardware PWM, FreeRTOS) |
 | **Sensor** | MPU-6050 6-DOF IMU (Accelerometer + Gyroscope) |
-| **Actuators** | 3x Nidec 24H Brushless DC Motors with internal drivers |
+| **Motors** | 3x Nidec 24H Brushless DC Motors with internal drivers |
 | **Power Supply** | 3S LiPo Battery (11.1V - 12.6V) connected to XT30 connector |
 | **Voltage Regulator**| L7805 Linear Regulator (12V to 5V for ESP32 VIN) |
-| **frame** | 3D Printed with PETG/PLA |
+| **Frame** | 3D Printed with PETG/PLA |
 | **Fasteners** | M4x16mm ballast bolts, M3x8mm frame screws |
 
 ---
@@ -69,8 +69,8 @@ Custom 2-layer PCB designed in KiCad:
 
 ### Key PCB Details:
 - The bottom layer is poured as a GND plane.
-- Main power is fed from a 3S LiPo pack (11.1V – 12.6V) through an XT30 connector (J1).
-- Power enters a 470 µF bulk electrolytic capacitor (C1) which smooths out voltage spikes.
+- Main power comes from a 3S LiPo pack (11.1V – 12.6V) through an XT30 connector (J1).
+- Power goes through a 470 µF bulk electrolytic capacitor (C1) which smooths out voltage spikes.
 - A dedicated L7805 linear regulator (U1) steps 12V down to 5V to power the ESP32, and it's decoupled by a 100 nF capacitor (C2) on the output.
 - The ESP32 plugs into female headers soldered to the board.
 - Three JST connectors (J3, J4, J5) break out PWM, Direction, Brake, Encoder, and Power lines from the Nidec 24H motors.
