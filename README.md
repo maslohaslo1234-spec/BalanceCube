@@ -14,7 +14,7 @@ Built as part of the Hack Club Fallen program.
 - **3-Axis Reaction Wheel Balancing:** Powered by three Nidec 24H brushless motors.
 - **Custom PCB:** Designed in KiCad for the ESP32 devkit, motor control signals, power distribution from a 3S LiPo, and MPU6050.
 - **Lightweight Frame:** 150x150x150mm modular frame with 45° chamfered edges, internal corner brackets, and dedicated component mounts.
-- **Dynamic Balancing and Nut Slots:** Reaction wheels has 16 M4 perimeter ballast bolts and captive M3 nut slots for clamping on the shaft.
+- **Dynamic Balancing and Nut Slots:** Reaction wheels have 16 M4 ballast bolts and M3 nut slots for clamping on the shaft.
 - **Center of Mass:** 3S LiPo battery mounted opposite to the 3 motors to balance the center.
 
 ---
