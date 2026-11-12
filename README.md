@@ -63,7 +63,11 @@ The mechanical parts are modeled in Onshape.
 
 ## Electronics
 
-Custom 2-layer PCB designed in KiCad:
+PCB designed in KiCad:
+
+<img width="1186" height="850" alt="Zrzut ekranu 2026-11-02 201625" src="https://github.com/user-attachments/assets/518d71de-f4b3-4782-a056-321e70569cb5" />
+
+<img width="1082" height="795" alt="image" src="https://github.com/user-attachments/assets/5534d9f3-f17f-4da1-b288-16ead53e563a" />
 
 <img width="737" height="645" alt="image" src="https://github.com/user-attachments/assets/f7735c41-cf3c-43ca-a07e-bb1750d4e2d3" />
 
