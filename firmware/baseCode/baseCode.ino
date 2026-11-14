@@ -4,7 +4,6 @@
  * Actuators: 3x Nidec 24H Brushless DC Motors
  * Sensor: MPU-6050 (GY-521)
  *
- * Designed for custom carrier PCB (KiCad) & 150mm modular frame (Onshape).
  */
 
 #include <Wire.h>
