@@ -4,6 +4,7 @@
  * Actuators: 3x Nidec 24H Brushless DC Motors
  * Sensor: MPU-6050 (GY-521)
  *
+ * Designed for custom carrier PCB (KiCad) & 150mm modular frame (Onshape).
  */
 
 #include <Wire.h>
@@ -49,9 +50,8 @@ const int PWM_RES  = 8;        // 8-bit resolution (speed range 0 - 255)
 float Kp = 15.0;  // Proportional reaction force to tilt angle
 float Kd = 1.2;   // Damping force (damper) reaction to rotational speed
 
-// MPU-6050 sensor presence flag
-bool imuConnected = false;
-
+unsigned long lastLoopTime = 0;         // Kiedy ostatnio wykonaliśmy pętlę
+const unsigned long LOOP_TIME_US = 10000; // Co ile mikrosekund ma ruszać pętla (10 000 us = 10 ms = 100 Hz)
 
 // ==========================================
 // 3. MOTOR CONTROL (setMotor)
@@ -80,6 +80,13 @@ void setMotor(int motorId, int speed, int dir) {
 // 4. PD CONTROLLER (balanceControl)
 // ==========================================
 void balanceControl(float angle, float gyroRate) {
+
+  // ZABEZPIECZENIE AWARYJNE:
+  if (abs(angle) > 35.0) {
+    setMotor(1, 0, 0); // Wyłącz silnik (prędkość 0)
+    return;            // Natychmiast przerwij tę funkcję!
+  }
+  
   // Calculate power as the sum of proportional and derivative terms:
   float motorPower = (Kp * angle) + (Kd * gyroRate);
 
@@ -96,56 +103,50 @@ void balanceControl(float angle, float gyroRate) {
 // 5. MPU-6050 SENSOR INITIALIZATION
 // ==========================================
 void initMPU() {
+  // 1. Pukamy do czujnika pod adresem 0x68
   Wire.beginTransmission(MPU_ADDR);
   byte error = Wire.endTransmission();
 
-  if (error == 0) {
-    // Sensor detected - wake it up from sleep (write 0 to power management register 0x6B)
-    Wire.beginTransmission(MPU_ADDR);
-    Wire.write(0x6B);
-    Wire.write(0);
-    Wire.endTransmission(true);
-
-    imuConnected = true;
-    Serial.println("[IMU] MPU-6050 detected and woken up successfully!");
-  } else {
-    imuConnected = false;
-    Serial.println("[IMU] No physical MPU-6050 sensor on I2C (starting simulation mode)");
+  // 2. Sprawdzamy, czy ktoś otworzył drzwi:
+  if (error != 0) {
+    Serial.println("[BŁĄD] Nie wykryto MPU-6050! Zatrzymano start.");
+    while (1) { 
+      delay(100); // Pętla bez wyjścia - bezpieczny zawał procesora
+    }
   }
-}
 
+  // 3. Jeśli czujnik odpowiedział (error == 0), wybudzamy go ze snu:
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x6B); // Rejestr zasilania (PWR_MGMT_1)
+  Wire.write(0);    // Wpisujemy 0, żeby go wybudzić
+  Wire.endTransmission(true);
+
+  Serial.println("[IMU] MPU-6050 gotowy do pracy.");
+}
 
 // ==========================================
 // 6. MPU-6050 SENSOR READ
 // ==========================================
 void readMPU(float &angle, float &gyroRate) {
-  if (imuConnected) {
-    // Read raw data from accelerometer and gyroscope (registers starting from 0x3B)
-    Wire.beginTransmission(MPU_ADDR);
-    Wire.write(0x3B);
-    Wire.endTransmission(false);
-    Wire.requestFrom((uint16_t)MPU_ADDR, (size_t)14, true);
+  // Read raw data from accelerometer and gyroscope (registers starting from 0x3B)
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x3B);
+  Wire.endTransmission(false);
+  Wire.requestFrom((uint16_t)MPU_ADDR, (size_t)14, true);
 
-    int16_t rawAccX = Wire.read() << 8 | Wire.read();
-    int16_t rawAccY = Wire.read() << 8 | Wire.read();
-    int16_t rawAccZ = Wire.read() << 8 | Wire.read();
-    Wire.read(); Wire.read(); // Skip temperature registers
-    int16_t rawGyroX = Wire.read() << 8 | Wire.read();
-    int16_t rawGyroY = Wire.read() << 8 | Wire.read();
-    int16_t rawGyroZ = Wire.read() << 8 | Wire.read();
+  int16_t rawAccX = Wire.read() << 8 | Wire.read();
+  int16_t rawAccY = Wire.read() << 8 | Wire.read();
+  int16_t rawAccZ = Wire.read() << 8 | Wire.read();
+  Wire.read(); Wire.read(); // Skip temperature registers
+  int16_t rawGyroX = Wire.read() << 8 | Wire.read();
+  int16_t rawGyroY = Wire.read() << 8 | Wire.read();
+  int16_t rawGyroZ = Wire.read() << 8 | Wire.read();
 
-    // Convert gravity to tilt angle (in degrees)
-    angle = atan2((float)rawAccX, (float)rawAccZ) * 180.0 / PI;
+  // Convert gravity to tilt angle (in degrees)
+  angle = atan2((float)rawAccX, (float)rawAccZ) * 180.0 / PI;
 
-    // Convert raw gyro data to degrees per second (divisor 131.0 for 250 dps scale)
-    gyroRate = (float)rawGyroY / 131.0;
-  } else {
-    // Dry test mode (generate small tilt for loop testing)
-    static float fakeTime = 0;
-    fakeTime += 0.05;
-    angle = sin(fakeTime) * 5.0; // Virtual swing +/- 5 degrees
-    gyroRate = cos(fakeTime) * 10.0;
-  }
+  // Convert raw gyro data to degrees per second (divisor 131.0 for 250 dps scale)
+  gyroRate = (float)rawGyroY / 131.0;
 }
 
 
@@ -184,6 +185,8 @@ void setup() {
   // Initialize gyroscope
   initMPU();
 
+  lastLoopTime = micros();
+  
   Serial.println("[SYSTEM] Configuration completed successfully. Starting control loop!");
 }
 
@@ -192,21 +195,13 @@ void setup() {
 // 8. MAIN LOOP - 100 Hz
 // ==========================================
 void loop() {
-  float currentAngle = 0.0;
-  float currentGyroRate = 0.0;
+  if (micros() - lastLoopTime >= LOOP_TIME_US) {
+    lastLoopTime = micros(); // Zapisujemy aktualny czas na stoperze
 
-  // 1. Read angle and angular velocity
-  readMPU(currentAngle, currentGyroRate);
+    float currentAngle = 0.0;
+    float currentGyroRate = 0.0;
 
-  // 2. Calculate PD controller response and control the motor
-  balanceControl(currentAngle, currentGyroRate);
-
-  // 3. Data preview in Serial Monitor
-  Serial.print("Angle: ");
-  Serial.print(currentAngle);
-  Serial.print(" deg | Angular Velocity: ");
-  Serial.print(currentGyroRate);
-  Serial.println(" deg/s");
-
-  delay(10); // Loop runs at approx. 100 Hz (every 10 ms)
+    readMPU(currentAngle, currentGyroRate);
+    balanceControl(currentAngle, currentGyroRate);
+  }
 }
