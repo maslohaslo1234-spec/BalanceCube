@@ -13,6 +13,8 @@
 // 1. PCB PIN DEFINITIONS
 // ==========================================
 
+#define PIN_LED 2   // Wbudowana niebieska dioda na płytce ESP32
+
 // I2C pins for MPU6050 gyroscope
 #define PIN_IMU_SDA    21
 #define PIN_IMU_SCL    22
@@ -53,6 +55,16 @@ float Kd = 1.2;   // Damping force (damper) reaction to rotational speed
 unsigned long lastLoopTime = 0;         // Kiedy ostatnio wykonaliśmy pętlę
 const unsigned long LOOP_TIME_US = 10000; // Co ile mikrosekund ma ruszać pętla (10 000 us = 10 ms = 100 Hz)
 
+const float DT = LOOP_TIME_US / 1000000.0; // czyli 0.01 sekundy
+
+float currentAngle = 0.0;
+float currentGyroRate = 0.0;
+
+bool isArmed = false;             // Czy kostka jest uzbrojona? Na starcie NIE (false)
+unsigned long uprightTimer = 0;   // Stoper liczący, od kiedy kostka jest blisko pionu
+
+float gyroOffset = 0.0; // Tu zapiszemy nasz wyliczony błąd zera
+
 // ==========================================
 // 3. MOTOR CONTROL (setMotor)
 // ==========================================
@@ -81,11 +93,34 @@ void setMotor(int motorId, int speed, int dir) {
 // ==========================================
 void balanceControl(float angle, float gyroRate) {
 
-  // ZABEZPIECZENIE AWARYJNE:
-  if (abs(angle) > 35.0) {
-    setMotor(1, 0, 0); // Wyłącz silnik (prędkość 0)
-    return;            // Natychmiast przerwij tę funkcję!
+  // STAN 1: Kostka jeszcze nie jest uzbrojona (czeka na pion przez 1 sekundę)
+  if (isArmed == false) {
+    setMotor(1, 0, 0); // Silnik na pewno ma stać!
+
+    if (abs(angle) < 10.0) {
+      // Jeśli trzymasz ją blisko pionu, sprawdzamy, czy minęła już 1 sekunda (1000 ms):
+      if (millis() - uprightTimer >= 1000) {
+        isArmed = true; // UZBROJONA!
+        Serial.println("[SYSTEM] Kostka uzbrojona! Zaczynam balansować.");
+      }
+    } else {
+      // Jeśli jest poza pionem (>= 10 stopni), ciągle zerujemy stoper:
+      uprightTimer = millis();
+    }
+
+    return; // Wychodzimy z funkcji, żeby nie liczyć PD dopóki się nie uzbroi
   }
+
+  // STAN 2: Kostka JEST uzbrojona, ale sprawdzamy, czy nie upadła
+  if (abs(angle) > 35.0) {
+    setMotor(1, 0, 0);
+    isArmed = false;         // Rozbrajamy ją! Musisz znowu przytrzymać ją 1s w pionie
+    uprightTimer = millis(); // Zerujemy stoper
+    Serial.println("[SYSTEM] Upadek! Rozbrojono silniki.");
+    return;
+  }
+
+  
   
   // Calculate power as the sum of proportional and derivative terms:
   float motorPower = (Kp * angle) + (Kd * gyroRate);
@@ -98,9 +133,37 @@ void balanceControl(float angle, float gyroRate) {
   }
 }
 
+// ==========================================
+// 5. KALIBRACJA ŻYROSKOPU
+// ==========================================
+void calibrateGyro() {
+  digitalWrite(PIN_LED, HIGH); // ZAPALAMY diodę: "Nie ruszaj kostki!"
+  Serial.println("[IMU] połóż kostkę nieruchomo - czekaj 2 sekundy na kalibrację...");
+  
+  delay(2000); // 2 sekundy na spokojne wpięcie XT30 i odłożenie na stół
+
+  float sum = 0.0;
+  for (int i = 0; i < 200; i++) {
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x45); // 0x45 to adres rejestru samego żyroskopu osi Y!
+    Wire.endTransmission(false);
+    Wire.requestFrom((uint16_t)MPU_ADDR, (size_t)2, true); // Bierzemy tylko 2 bajty osi Y
+
+    int16_t rawGyroY = Wire.read() << 8 | Wire.read();
+    sum += (float)rawGyroY / 131.0; // Wrzucamy pomiar do skarbonki
+
+    delay(3); // Krótka przerwa 3 ms między pomiarami
+  }
+
+  gyroOffset = sum / 200.0;
+  digitalWrite(PIN_LED, LOW); // GASIMY diodę: "Gotowe! Można stawiać kostkę."
+  Serial.print("[IMU] Skalibrowano! Offset: ");
+  Serial.println(gyroOffset);
+}
+
 
 // ==========================================
-// 5. MPU-6050 SENSOR INITIALIZATION
+// 6. MPU-6050 SENSOR INITIALIZATION
 // ==========================================
 void initMPU() {
   // 1. Pukamy do czujnika pod adresem 0x68
@@ -125,7 +188,24 @@ void initMPU() {
 }
 
 // ==========================================
-// 6. MPU-6050 SENSOR READ
+// 7. Initial Angle
+// ==========================================
+void setInitialAngle() {
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x3B);
+  Wire.endTransmission(false);
+  Wire.requestFrom((uint16_t)MPU_ADDR, (size_t)6, true); // Tu wystarczy tylko 6 bajtów akcelerometru!
+
+  int16_t rawAccX = Wire.read() << 8 | Wire.read();
+  int16_t rawAccY = Wire.read() << 8 | Wire.read();
+  int16_t rawAccZ = Wire.read() << 8 | Wire.read();
+
+  // Ustawiamy od razu prawdziwy kąt startowy bez filtra 98%/2%:
+  currentAngle = atan2((float)rawAccX, (float)rawAccZ) * 180.0 / PI;
+}
+
+// ==========================================
+// 8. MPU-6050 SENSOR READ
 // ==========================================
 void readMPU(float &angle, float &gyroRate) {
   // Read raw data from accelerometer and gyroscope (registers starting from 0x3B)
@@ -142,16 +222,19 @@ void readMPU(float &angle, float &gyroRate) {
   int16_t rawGyroY = Wire.read() << 8 | Wire.read();
   int16_t rawGyroZ = Wire.read() << 8 | Wire.read();
 
-  // Convert gravity to tilt angle (in degrees)
-  angle = atan2((float)rawAccX, (float)rawAccZ) * 180.0 / PI;
+// 1. Pomocniczy kąt tylko z samego akcelerometru:
+  float accAngle = atan2((float)rawAccX, (float)rawAccZ) * 180.0 / PI;
 
-  // Convert raw gyro data to degrees per second (divisor 131.0 for 250 dps scale)
-  gyroRate = (float)rawGyroY / 131.0;
+  // 2. Prędkość kątowa z żyroskopu (w stopniach na sekundę):
+  gyroRate = ((float)rawGyroY / 131.0) - gyroOffset;
+
+  // 3. Filtr Komplementarny (98% żyroskop + 2% akcelerometr):
+  angle = 0.98 * (angle + gyroRate * DT) + 0.02 * accAngle;
 }
 
 
 // ==========================================
-// 7. SETUP (System Initialization)
+// 9. SETUP (System Initialization)
 // ==========================================
 void setup() {
   Serial.begin(115200);
@@ -168,6 +251,7 @@ void setup() {
   pinMode(PIN_M2_DIR, OUTPUT);
   pinMode(PIN_M3_DIR, OUTPUT);
   pinMode(PIN_ALL_BRAKE, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 
   // Release motor brake
   digitalWrite(PIN_ALL_BRAKE, LOW);
@@ -183,23 +267,25 @@ void setup() {
   setMotor(3, 0, 0);
 
   // Initialize gyroscope
-  initMPU();
+initMPU();
+  delay(50);          // Dajemy obudzonemu czujnikowi 50 ms na zrobienie pierwszego pomiaru!
 
+  calibrateGyro();
+
+  setInitialAngle();  // Ustawiamy prawdziwy kąt początkowy
   lastLoopTime = micros();
-  
+
   Serial.println("[SYSTEM] Configuration completed successfully. Starting control loop!");
 }
 
 
 // ==========================================
-// 8. MAIN LOOP - 100 Hz
+// 10. MAIN LOOP - 100 Hz
 // ==========================================
 void loop() {
   if (micros() - lastLoopTime >= LOOP_TIME_US) {
     lastLoopTime = micros(); // Zapisujemy aktualny czas na stoperze
 
-    float currentAngle = 0.0;
-    float currentGyroRate = 0.0;
 
     readMPU(currentAngle, currentGyroRate);
     balanceControl(currentAngle, currentGyroRate);
